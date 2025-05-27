@@ -13,20 +13,22 @@ CREATE TABLE users (
 ) ENGINE=InnoDB;
 
 -- 2. Products Table (with escaped 'condition' column)
-CREATE TABLE products (
-  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
-  type ENUM('single', 'pack_rip') NOT NULL,
-  price DECIMAL(10,2) NOT NULL,
-  image_url VARCHAR(255),
+CREATE TABLE `products` (
+  `id` CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  `name` VARCHAR(100) NOT NULL,
+  `description` TEXT,
+  `type` ENUM('single', 'pack_rip') NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL,
+  `image_url` VARCHAR(255),
   `condition` ENUM('NM', 'LP', 'MP', 'HP') DEFAULT 'NM',
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_products_type (type),
-  INDEX idx_products_active (is_active),
-  INDEX idx_products_price (price)
-) ENGINE=InnoDB;
+  `is_active` BOOLEAN DEFAULT TRUE,
+  `stock_quantity` INT NOT NULL DEFAULT 0 CHECK (`stock_quantity` >= 0),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_products_type` (`type`),
+  INDEX `idx_products_active` (`is_active`),
+  INDEX `idx_products_price` (`price`),
+  INDEX `idx_products_stock` (`stock_quantity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 3. Orders Table
 CREATE TABLE orders (
@@ -114,3 +116,13 @@ CREATE TABLE audit_log (
   INDEX idx_audit_record (table_name, record_id),
   INDEX idx_audit_timing (performed_at)
 ) ENGINE=InnoDB;
+
+CREATE TABLE inventory (
+  product_id CHAR(36) PRIMARY KEY,
+  available_quantity INT NOT NULL DEFAULT 0 CHECK (available_quantity >= 0),
+  reserved_quantity INT NOT NULL DEFAULT 0 CHECK (reserved_quantity >= 0),
+  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
